@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"toDoList/models"
+	e "toDoList/pkg/errors"
 )
 
 const lenOfOrderID = 6
@@ -62,7 +63,7 @@ func Delete(id string) ([]byte, error) {
 		"id": "`+id+`"
 	}`)))
 	if resp.StatusCode == http.StatusNotFound {
-		return nil, models.ErrNotExists
+		return nil, e.ErrNotExists
 	}
 	if err != nil {
 		return nil, err
@@ -78,7 +79,7 @@ func CompleteTask(id string) ([]byte, error) {
 		"id": "`+id+`"
 	}`)))
 	if resp.StatusCode == http.StatusNotFound {
-		return nil, models.ErrNotExists
+		return nil, e.ErrNotExists
 	}
 	if err != nil {
 		return nil, err

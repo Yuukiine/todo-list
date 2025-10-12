@@ -9,6 +9,7 @@ import (
 	_ "github.com/lib/pq"
 
 	"toDoList/models"
+	e "toDoList/pkg/errors"
 )
 
 type Storage struct {
@@ -31,7 +32,7 @@ func (s *Storage) Create(w http.ResponseWriter, r *http.Request) {
 	log.Println("storage.Create()...")
 	var list models.List
 	if err := json.NewDecoder(r.Body).Decode(&list); err != nil {
-		models.SendJSONError(w, models.ErrInternalServer, http.StatusInternalServerError)
+		e.SendJSONError(w, e.ErrInternalServer, http.StatusInternalServerError)
 		log.Println("storage.Create(): ", err)
 
 		return
@@ -42,7 +43,7 @@ func (s *Storage) Create(w http.ResponseWriter, r *http.Request) {
 		VALUES($1, $2, $3)
 	`)
 	if err != nil {
-		models.SendJSONError(w, models.ErrInternalServer, http.StatusInternalServerError)
+		e.SendJSONError(w, e.ErrInternalServer, http.StatusInternalServerError)
 		log.Println("storage.Create(): ", err)
 
 		return
@@ -50,7 +51,7 @@ func (s *Storage) Create(w http.ResponseWriter, r *http.Request) {
 
 	_, err = stmt.Exec(list.ID, list.Title, list.Description)
 	if err != nil {
-		models.SendJSONError(w, models.ErrInternalServer, http.StatusInternalServerError)
+		e.SendJSONError(w, e.ErrInternalServer, http.StatusInternalServerError)
 		log.Println("storage.Create(): ", err)
 
 		return
@@ -64,7 +65,7 @@ func (s *Storage) GetAllTasks(w http.ResponseWriter, r *http.Request) {
 		FROM tasks
 	`)
 	if err != nil {
-		models.SendJSONError(w, models.ErrInternalServer, http.StatusInternalServerError)
+		e.SendJSONError(w, e.ErrInternalServer, http.StatusInternalServerError)
 		log.Println("storage.GetAllTasks(): ", err)
 
 		return
@@ -73,7 +74,7 @@ func (s *Storage) GetAllTasks(w http.ResponseWriter, r *http.Request) {
 	var lists []models.List
 	rows, err := stmt.Query()
 	if err != nil {
-		models.SendJSONError(w, models.ErrInternalServer, http.StatusInternalServerError)
+		e.SendJSONError(w, e.ErrInternalServer, http.StatusInternalServerError)
 		log.Println("storage.GetAllTasks(): ", err)
 
 		return
@@ -84,7 +85,7 @@ func (s *Storage) GetAllTasks(w http.ResponseWriter, r *http.Request) {
 		var list models.List
 
 		if err = rows.Scan(&list.ID, &list.Title, &list.Description, &list.Completed); err != nil {
-			models.SendJSONError(w, models.ErrInternalServer, http.StatusInternalServerError)
+			e.SendJSONError(w, e.ErrInternalServer, http.StatusInternalServerError)
 			log.Println("storage.GetAllTasks(): ", err)
 
 			return
@@ -94,7 +95,7 @@ func (s *Storage) GetAllTasks(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err = rows.Err(); err != nil {
-		models.SendJSONError(w, models.ErrInternalServer, http.StatusInternalServerError)
+		e.SendJSONError(w, e.ErrInternalServer, http.StatusInternalServerError)
 		log.Println("storage.GetAllTasks(): ", err)
 
 		return
@@ -103,13 +104,13 @@ func (s *Storage) GetAllTasks(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 	b, err := json.MarshalIndent(lists, "", "	")
 	if err != nil {
-		models.SendJSONError(w, models.ErrInternalServer, http.StatusInternalServerError)
+		e.SendJSONError(w, e.ErrInternalServer, http.StatusInternalServerError)
 		log.Println("storage.GetAllTasks(): ", err)
 
 		return
 	}
 	if _, err = w.Write(b); err != nil {
-		models.SendJSONError(w, models.ErrInternalServer, http.StatusInternalServerError)
+		e.SendJSONError(w, e.ErrInternalServer, http.StatusInternalServerError)
 		log.Println("storage.GetAllTasks(): ", err)
 
 		return
@@ -127,7 +128,7 @@ func (s *Storage) AllIDs(w http.ResponseWriter, r *http.Request) {
 		FROM tasks
 	`)
 	if err != nil {
-		models.SendJSONError(w, models.ErrInternalServer, http.StatusInternalServerError)
+		e.SendJSONError(w, e.ErrInternalServer, http.StatusInternalServerError)
 		log.Println("storage.AllIDs(): ", err)
 
 		return
@@ -136,7 +137,7 @@ func (s *Storage) AllIDs(w http.ResponseWriter, r *http.Request) {
 	var ids []string
 	rows, err := stmt.Query()
 	if err != nil {
-		models.SendJSONError(w, models.ErrInternalServer, http.StatusInternalServerError)
+		e.SendJSONError(w, e.ErrInternalServer, http.StatusInternalServerError)
 		log.Println("storage.AllIDs(): ", err)
 		return
 	}
@@ -146,7 +147,7 @@ func (s *Storage) AllIDs(w http.ResponseWriter, r *http.Request) {
 		var id string
 
 		if err = rows.Scan(&id); err != nil {
-			models.SendJSONError(w, models.ErrInternalServer, http.StatusInternalServerError)
+			e.SendJSONError(w, e.ErrInternalServer, http.StatusInternalServerError)
 			log.Println("storage.AllIDs(): ", err)
 			return
 		}
@@ -155,7 +156,7 @@ func (s *Storage) AllIDs(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err = rows.Err(); err != nil {
-		models.SendJSONError(w, models.ErrInternalServer, http.StatusInternalServerError)
+		e.SendJSONError(w, e.ErrInternalServer, http.StatusInternalServerError)
 		log.Println("storage.AllIDs(): ", err)
 		return
 	}
@@ -173,7 +174,7 @@ func (s *Storage) DeleteTask(w http.ResponseWriter, r *http.Request) {
 		ID string `json:"id"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&id); err != nil {
-		models.SendJSONError(w, models.ErrInternalServer, http.StatusInternalServerError)
+		e.SendJSONError(w, e.ErrInternalServer, http.StatusInternalServerError)
 		log.Println("storage.DeleteTask(): ", err)
 		return
 	}
@@ -183,27 +184,27 @@ func (s *Storage) DeleteTask(w http.ResponseWriter, r *http.Request) {
 		WHERE id = $1
 	`)
 	if err != nil {
-		models.SendJSONError(w, models.ErrInternalServer, http.StatusInternalServerError)
+		e.SendJSONError(w, e.ErrInternalServer, http.StatusInternalServerError)
 		log.Println("storage.DeleteTask(): ", err)
 		return
 	}
 
 	result, err := stmt.Exec(id.ID)
 	if err != nil {
-		models.SendJSONError(w, models.ErrInternalServer, http.StatusInternalServerError)
+		e.SendJSONError(w, e.ErrInternalServer, http.StatusInternalServerError)
 		log.Println("storage.DeleteTask(): ", err)
 		return
 	}
 
 	rows, err := result.RowsAffected()
 	if err != nil {
-		models.SendJSONError(w, models.ErrInternalServer, http.StatusInternalServerError)
+		e.SendJSONError(w, e.ErrInternalServer, http.StatusInternalServerError)
 		log.Println("storage.DeleteTask(): ", err)
 		return
 	}
 
 	if rows == 0 {
-		models.SendJSONError(w, models.ErrNotExists, http.StatusNotFound)
+		e.SendJSONError(w, e.ErrNotExists, http.StatusNotFound)
 		log.Println("storage.DeleteTask(): ", err)
 		return
 	}
@@ -217,7 +218,7 @@ func (s *Storage) CompleteTask(w http.ResponseWriter, r *http.Request) {
 		ID string `json:"id"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&id); err != nil {
-		models.SendJSONError(w, models.ErrInternalServer, http.StatusInternalServerError)
+		e.SendJSONError(w, e.ErrInternalServer, http.StatusInternalServerError)
 		log.Println("storage.CompleteTask(): ", err)
 		return
 	}
@@ -228,14 +229,14 @@ func (s *Storage) CompleteTask(w http.ResponseWriter, r *http.Request) {
 		WHERE id = $1
 	`)
 	if err != nil {
-		models.SendJSONError(w, models.ErrInternalServer, http.StatusInternalServerError)
+		e.SendJSONError(w, e.ErrInternalServer, http.StatusInternalServerError)
 		log.Println("storage.CompleteTask(): ", err)
 		return
 	}
 
 	_, err = stmt.Exec(id.ID)
 	if err != nil {
-		models.SendJSONError(w, models.ErrNotExists, http.StatusNotFound)
+		e.SendJSONError(w, e.ErrNotExists, http.StatusNotFound)
 		log.Println("storage.CompleteTask(): ", err)
 		return
 	}
@@ -246,7 +247,7 @@ func (s *Storage) CompleteTask(w http.ResponseWriter, r *http.Request) {
 		WHERE id = $1
 	`)
 	if err != nil {
-		models.SendJSONError(w, models.ErrInternalServer, http.StatusInternalServerError)
+		e.SendJSONError(w, e.ErrInternalServer, http.StatusInternalServerError)
 		log.Println("storage.CompleteTask(): ", err)
 		return
 	}
@@ -254,7 +255,7 @@ func (s *Storage) CompleteTask(w http.ResponseWriter, r *http.Request) {
 	var list models.List
 	err = stmt.QueryRow(id.ID).Scan(&list.ID, &list.Title, &list.Description, &list.Completed)
 	if err != nil {
-		models.SendJSONError(w, models.ErrInternalServer, http.StatusInternalServerError)
+		e.SendJSONError(w, e.ErrInternalServer, http.StatusInternalServerError)
 		log.Println("storage.CompleteTask(): ", err)
 		return
 	}
@@ -263,7 +264,7 @@ func (s *Storage) CompleteTask(w http.ResponseWriter, r *http.Request) {
 
 	w.WriteHeader(http.StatusOK)
 	if _, err = w.Write(b); err != nil {
-		models.SendJSONError(w, models.ErrInternalServer, http.StatusInternalServerError)
+		e.SendJSONError(w, e.ErrInternalServer, http.StatusInternalServerError)
 		log.Println("storage.CompleteTask(): ", err)
 	}
 }
