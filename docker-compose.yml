@@ -1,0 +1,31 @@
+services:
+  postgres:
+    image: postgres:15
+    container_name: pet-postgres
+    restart: always
+    environment:
+      - POSTGRES_USER=${DB_LOGIN}
+      - POSTGRES_PASSWORD=${DB_PASSWORD}
+      - POSTGRES_DB=${DB_NAME}
+    ports:
+      - "6700:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+  storage-service:
+    build:
+      context: .
+      dockerfile: ./storage/Dockerfile
+    depends_on:
+      - postgres
+    ports:
+      - "6701:6701"
+  api-service:
+    build:
+      context: .
+      dockerfile: ./api/Dockerfile
+    depends_on:
+      - storage-service
+    ports:
+      - "6702:6702"
+volumes:
+  pgdata:
