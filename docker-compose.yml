@@ -22,7 +22,7 @@ services:
   api-service:
     build:
       context: .
-      dockerfile: api-service/Dockerfile
+      dockerfile: api-service-2/Dockerfile
     depends_on:
       - storage-service
     ports:
