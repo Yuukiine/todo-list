@@ -6,10 +6,9 @@ RUN go mod download
 
 COPY . .
 
-RUN go build -o api-app ./api-service-2/main.go
+RUN go build -o kafka-app ./kafka/main.go
 
 FROM golang:1.24
 WORKDIR /app
-COPY --from=builder /app/api-app .
-
-CMD ["./api-app"]
+COPY --from=builder /app/kafka-app .
+CMD ["./kafka-app"]

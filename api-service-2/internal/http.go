@@ -1,12 +1,15 @@
 package internal
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"log"
 	"net/http"
+	"time"
 
 	"github.com/go-playground/validator/v10"
+	"github.com/segmentio/kafka-go"
 
 	"toDoList/models"
 	e "toDoList/pkg/errors"
@@ -42,6 +45,11 @@ func CreateHandler(w http.ResponseWriter, r *http.Request) {
 	if _, err = w.Write(b); err != nil {
 		log.Println("failed to write response: ", err)
 	}
+
+	if err = produceEvent("todo-events", "User successfully created task"); err != nil {
+		log.Println("ListHandler(): Error producing event: ", err)
+	}
+
 	log.Println("successfully created")
 }
 
@@ -63,6 +71,11 @@ func ListHandler(w http.ResponseWriter, r *http.Request) {
 	if _, err = w.Write(b); err != nil {
 		log.Println("failed to write response: ", err)
 	}
+
+	if err = produceEvent("todo-events", "User successfully listed all tasks"); err != nil {
+		log.Println("ListHandler(): Error producing event: ", err)
+	}
+
 	log.Println("successfully lists all tasks")
 }
 
@@ -102,6 +115,11 @@ func DeleteHandler(w http.ResponseWriter, r *http.Request) {
 	if _, err = w.Write(b); err != nil {
 		log.Println("failed to write response: ", err)
 	}
+
+	if err = produceEvent("todo-events", "User deleted task"); err != nil {
+		log.Println("ListHandler(): Error producing event: ", err)
+	}
+
 	log.Println("successfully deleted")
 }
 
@@ -140,5 +158,26 @@ func DoneHandler(w http.ResponseWriter, r *http.Request) {
 	if _, err = w.Write(b); err != nil {
 		log.Println("failed to write response: ", err)
 	}
+
+	if err = produceEvent("todo-events", "User successfully completed task"); err != nil {
+		log.Println("ListHandler(): Error producing event: ", err)
+	}
+
 	log.Println("successfully done")
+}
+
+func produceEvent(topic, message string) error {
+	writer := kafka.NewWriter(kafka.WriterConfig{
+		Brokers:  []string{"kafka:9092"},
+		Topic:    topic,
+		Balancer: &kafka.LeastBytes{},
+	})
+	defer writer.Close()
+
+	return writer.WriteMessages(context.Background(),
+		kafka.Message{
+			Key:   []byte(time.Now().Format(time.RFC3339)),
+			Value: []byte(time.Now().Format("15:04:05 02.01.2006") + ", Message:\n" + message),
+		},
+	)
 }
