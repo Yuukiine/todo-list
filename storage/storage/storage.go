@@ -234,8 +234,22 @@ func (s *Storage) CompleteTask(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	_, err = stmt.Exec(id.ID)
+	result, err := stmt.Exec(id.ID)
 	if err != nil {
+		e.SendJSONError(w, e.ErrInternalServer, http.StatusInternalServerError)
+		log.Println("storage.CompleteTask(): ", err)
+		return
+	}
+
+	rows, err := result.RowsAffected()
+	log.Println(result.RowsAffected())
+	if err != nil {
+		e.SendJSONError(w, e.ErrInternalServer, http.StatusInternalServerError)
+		log.Println("storage.CompleteTask(): ", err)
+		return
+	}
+
+	if rows == 0 {
 		e.SendJSONError(w, e.ErrNotExists, http.StatusNotFound)
 		log.Println("storage.CompleteTask(): ", err)
 		return

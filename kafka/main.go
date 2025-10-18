@@ -30,7 +30,7 @@ func ConsumeMessage(r *kafka.Reader, w *bufio.Writer) {
 
 func main() {
 	r := kafka.NewReader(kafka.ReaderConfig{
-		Brokers: []string{"kafka:9092"},
+		Brokers: []string{"localhost:6703"},
 		Topic:   "todo-events",
 		GroupID: "file-writer-group",
 	})

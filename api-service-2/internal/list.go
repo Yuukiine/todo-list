@@ -16,12 +16,12 @@ import (
 
 const lenOfOrderID = 6
 
-func Create(title, description string, completed bool) ([]byte, error) {
+func Create(title, description string) ([]byte, error) {
 	list := models.List{
 		ID:          generateUniqueID(),
 		Title:       title,
 		Description: description,
-		Completed:   completed,
+		Completed:   false,
 	}
 
 	b, err := json.MarshalIndent(list, "", "	")
@@ -29,7 +29,7 @@ func Create(title, description string, completed bool) ([]byte, error) {
 		panic(err)
 	}
 
-	resp, err := http.Post("http://storage-service:6701/create", "application/json", bytes.NewReader(b))
+	resp, err := http.Post("http://localhost:6701/create", "application/json", bytes.NewReader(b))
 	if err != nil {
 		return nil, err
 	}
@@ -44,7 +44,7 @@ func Create(title, description string, completed bool) ([]byte, error) {
 
 func GetAllTasks() ([]models.List, error) {
 	var lists []models.List
-	resp, err := http.Get("http://storage-service:6701/list")
+	resp, err := http.Get("http://localhost:6701/list")
 	if err != nil {
 		return nil, err
 	}
@@ -58,7 +58,7 @@ func GetAllTasks() ([]models.List, error) {
 }
 
 func Delete(id string) ([]byte, error) {
-	resp, err := http.Post("http://storage-service:6701/delete", "application/json", bytes.NewBuffer([]byte(`
+	resp, err := http.Post("http://localhost:6701/delete", "application/json", bytes.NewBuffer([]byte(`
 	{
 		"id": "`+id+`"
 	}`)))
@@ -70,11 +70,11 @@ func Delete(id string) ([]byte, error) {
 	}
 	defer resp.Body.Close()
 
-	return []byte("{}"), nil
+	return []byte{}, nil
 }
 
 func CompleteTask(id string) ([]byte, error) {
-	resp, err := http.Post("http://storage-service:6701/done", "application/json", bytes.NewBuffer([]byte(`
+	resp, err := http.Post("http://localhost:6701/done", "application/json", bytes.NewBuffer([]byte(`
 	{
 		"id": "`+id+`"
 	}`)))
@@ -102,7 +102,7 @@ func generateUniqueID() string {
 	m := make(map[string]struct{})
 	const letters = "1234567890abcdefghijklmnopqrstuvwxyz"
 
-	resp, err := http.Get("http://storage-service:6701/all")
+	resp, err := http.Get("http://localhost:6701/all")
 	if err != nil {
 		log.Println("failed to get response: ", err)
 	}
